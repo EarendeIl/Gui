@@ -8,12 +8,16 @@
     </script>
     <!-- 设置 viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <!-- Your HTML body content here -->
+
     <!-- 异步加载 jQuery 和 Bootstrap -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" async></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" async></script>
+
     <!-- 延迟加载 Leaflet 和 Leaflet 相关的样式 -->
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js" defer></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css" defer/>
+
     <!-- 延迟加载 Leaflet Awesome Markers 和相关样式 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"
             defer></script>
@@ -146,7 +150,6 @@
     <div class="language-map-style-container">
         <select id="mapStyleSelect" class="form-select map-style-select">
             <option value="7">默认地图</option>
-<!--            <option value="15">详细地图</option>-->
             <option value="6">卫星地图</option>
         </select>
         <button onclick="toggleLanguage()" data-chinese="中文" data-english="EN">中文</button>
@@ -176,9 +179,6 @@
                 if (option.value === '7') {
                     option.innerText = '默认地图';
                 }
-<!--                else if (option.value === '8') {-->
-<!--                    option.innerText = '详细地图';-->
-<!--                } -->
                 else if (option.value === '6') {
                     option.innerText = '卫星地图';
                 }
@@ -186,9 +186,6 @@
                 if (option.value === '7') {
                     option.innerText = 'Default  Map';
                 }
-<!--                else if (option.value === '8') {-->
-<!--                    option.innerText = 'Detailed Map';-->
-<!--                } -->
                 else if (option.value === '6') {
                     option.innerText = 'Satellite Map';
                 }
