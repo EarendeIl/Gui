@@ -2,3 +2,4 @@ PyQt5
 PyQtWebEngine
 folium
 pyqt5-tools
+nuitka

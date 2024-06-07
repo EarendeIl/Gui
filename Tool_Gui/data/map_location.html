@@ -2,33 +2,23 @@
 <html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-    <script>
-        L_NO_TOUCH = false;
-        L_DISABLE_3D = false;
-    </script>
-    <!-- 设置 viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <!-- Your HTML body content here -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script type="text/javascript">
+        window._AMapSecurityConfig = {
+            securityJsCode: '914d0c4b8fed27cfa5684b985a73d76c',
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- 异步加载 jQuery 和 Bootstrap -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" async></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" async></script>
+    <script type="text/javascript"
+            src="https://webapi.amap.com/maps?v=2.0&key=9d657ea25503fa89a5cbffde19437fe1"></script>
+    <title>Gui</title>
 
-    <!-- 延迟加载 Leaflet 和 Leaflet 相关的样式 -->
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js" defer></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css" defer/>
-
-    <!-- 延迟加载 Leaflet Awesome Markers 和相关样式 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"
-            defer></script>
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"
-          defer/>
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"
-          defer/>
-
-    <style>
+    <style type="text/css">
         html, body {
             width: 100%;
             height: 100%;
@@ -36,6 +26,7 @@
             padding: 0;
             display: flex;
             flex-direction: column;
+            font-family: Arial, sans-serif;
         }
 
         #map {
@@ -47,37 +38,36 @@
             justify-content: center;
             padding: 18px;
             background-color: white;
-            z-index: ;
-            align-items: center; /* 垂直居中对齐 */
+            align-items: center;
             position: relative;
-            margin-top: 10px
-
+            margin-top: 10px;
         }
+
         .language-map-style-container {
             display: flex;
             align-items: center;
         }
+
         .map-style-select {
             margin-right: 10px;
             height: 35px;
-            font-size: 16px; /* 设置字体大小为16像素 */
+            font-size: 16px;
             font-family: Microsoft Yahei UI;
-
         }
+
         .input-container input {
             width: 300px;
             margin-right: 1px;
             height: 35px;
             font-size: 16px;
+            border: 1px solid #FFBFD5; /* 输入框框的颜色 */
+            color: #FD7EB0; /* 输入框文字的颜色 */
+            }
+
+        .leaflet-container {
+            font-size: 1.2rem;
         }
 
-        .input-container button {
-            height: 35px;
-            padding: 0 10px;
-            width: 80px;
-        }
-
-        .leaflet-container { font-size: 1.2rem; }
         .search-box {
             display: flex;
             padding: 0 15px;
@@ -87,26 +77,27 @@
         .search-box {
             position: relative;
         }
-        .coordinates-box{
+
+        .coordinates-box {
             position: relative;
         }
+
         #poiLabel {
             position: absolute;
-            top: -20px; /* 调整标签位置，使其正好位于输入框的上方 */
+            top: -20px;
         }
-        #poiName {
-            width: 300px; /* 适当调整输入框的宽度 */
-            margin-left: 0px
-            padding-top: 10px; /* 为输入框增加上边距，留出空间给标签 */
 
+        #poiName {
+            width: 300px;
+            margin-left: 0px;
+            padding-top: 1px;
         }
 
         #searchButton {
-            margin-left: 1px; /* 设置按钮与输入框之间的间距 */
-            height:40px;
+            margin-left: 1px;
+            height: 40px;
             font-size: 16px;
         }
-
 
         .coordinates-box {
             position: relative;
@@ -114,26 +105,62 @@
 
         #coordinatesLabel {
             position: absolute;
-            top: -20px; /* 调整标签位置，使其正好位于输入框的上方 */
+            top: -20px;
         }
 
         #coordinates {
-            padding-bottom: -100px; /* 为输入框增加上边距，留出空间给标签 */
+            padding-bottom: -100px;
         }
+
         .language-map-style-container select,
         .language-map-style-container button {
-            margin: 0; /* 去除按钮和选择框之间的间隙 */
+            margin: 0;
         }
+
         .language-map-style-container select {
-        width: 125px; /* 设置复选框的宽度 */
-        height: 40px; /* 设置复选框的高度 */
-        font-size: 16px;
+            width: 125px;
+            height: 40px;
+            font-size: 16px;
+            border: 1px solid #FFBFD5; /* 下拉框边框颜色 */
+            color: #FD7EB0; /* 输入框文字的颜色 */
+            outline: none; /* 去掉默认的焦点样式 */
+            font-weight: bold; /* 添加粗体样式 */
+            }
+        .input-container input:focus {
+            border-color: #FD7EB0; /* 输入框点击时的边框颜色 */
+            outline: none; /* 去掉默认的焦点样式 */
         }
+        .input-container button {
+            height: 35px;
+            padding: 0 10px;
+            width: 80px;
+            background-color: #FFDCE3; /* 默认背景色 */
+            border: 1px solid #FFDCE3; /* 边框颜色 */
+            font-weight: bold; /* 添加粗体样式 */
+            color: #FA57A1;
+            outline: none; /* 去掉默认的焦点样式 */
+        }
+        .input-container button:active {
+            background-color: #FEA5C3; /* 点击时的背景色 */
+            border: 1px solid #FEA5C3; /* 点击时的边框颜色 */
+        }
+
         .language-map-style-container button {
-        width: 100px; /* 设置按钮的宽度 */
-        height: 40px; /* 设置按钮的高度 */
-        font-size: 16px; /* 设置按钮字体大小 */
+            width: 80px;
+            height: 40px;
+            font-size: 16px;
+            background-color: #FFDCE3; /* 默认背景色 */
+            border: 1px solid #FFDCE3; /* 边框颜色 */
         }
+        .language-map-style-container button:active {
+            background-color: #FEA5C3; /* 点击时的背景色 */
+            border: 1px solid #FEA5C3; /* 点击时的边框颜色 */
+        }
+        #poiLabel,
+        #coordinatesLabel {
+            color: #FA57A1 ;
+        }
+
     </style>
 </head>
 <body>
@@ -144,220 +171,185 @@
         <button id="searchButton" data-chinese="搜索" data-english="Search">搜索</button>
     </div>
     <div class="coordinates-box">
-        <b id="coordinatesLabel" data-chinese="经纬度：" data-english="Coordinates:">经纬度：</b>
+        <b id="coordinatesLabel" data-chinese="经纬度:" data-english="Coordinates:">经纬度：</b>
         <input id="coordinates" type="text">
     </div>
     <div class="language-map-style-container">
         <select id="mapStyleSelect" class="form-select map-style-select">
-            <option value="7">默认地图</option>
-            <option value="6">卫星地图</option>
+            <option value="amap://styles/normal" data-chinese="标准" data-english="Normal">标准</option>
+            <option value="amap://styles/dark" data-chinese="幻影黑" data-english="Dark">幻影黑</option>
+            <option value="amap://styles/light" data-chinese="月光银" data-english="Light">月光银</option>
+            <option value="amap://styles/whitesmoke" data-chinese="远山黛" data-english="Whitesmoke">远山黛</option>
+            <option value="amap://styles/fresh" data-chinese="草色青" data-english="Fresh">草色青</option>
+            <option value="amap://styles/grey" data-chinese="雅士灰" data-english="Grey">雅士灰</option>
+            <option value="amap://styles/graffiti" data-chinese="涂鸦" data-english="Graffiti">涂鸦</option>
+            <option value="amap://styles/macaron" data-chinese="马卡龙" data-english="Macaron">马卡龙</option>
+            <option value="amap://styles/blue" data-chinese="靛青蓝" data-english="Blue">靛青蓝</option>
+            <option value="amap://styles/darkblue" data-chinese="极夜蓝" data-english="Darkblue">极夜蓝</option>
+            <option value="amap://styles/wine" data-chinese="酱籽" data-english="Wine">酱籽</option>
         </select>
-        <button onclick="toggleLanguage()" data-chinese="中文" data-english="EN">中文</button>
+        <button id="toggleLanguageButton" data-chinese="中文" data-english="EN" onclick="toggleLanguage()">中文</button>
     </div>
 </div>
 <div id="map"></div>
 <script>
-    var isChinese = true; // 初始语言为中文
-    var map, gaodeLayer; // 声明map和gaodeLayer变量
+    var map;
+    var marker;
+    var isChinese = true;
+    var previousMarker = null;
+    var isProcessingSearch = false;
 
-    // 切换按钮点击事件
-    function toggleLanguage() {
-        isChinese = !isChinese; // 切换语言状态
-        updateLanguage(); // 更新页面语言
-        updateCheckboxLabel(); // 更新复选框内容语言
-
-    // 根据当前地图样式更新地图语言
-    var currentStyle = document.getElementById('mapStyleSelect').value;
-    updateMapLayer(currentStyle);
-    }
-    // 更新复选框内容语言
-    function updateCheckboxLabel() {
-        var selectElement = document.getElementById('mapStyleSelect');
-        var options = selectElement.querySelectorAll('option');
-        options.forEach(function(option) {
-            if (isChinese) {
-                if (option.value === '7') {
-                    option.innerText = '默认地图';
-                }
-                else if (option.value === '6') {
-                    option.innerText = '卫星地图';
-                }
+function getPOIName(latlng) {
+    AMap.plugin('AMap.Geocoder', function() {
+        var geocoder = new AMap.Geocoder();
+        geocoder.getAddress(latlng, function(status, result) {
+            console.log(status, result);
+            if (status === 'complete' && result.regeocode) {
+                var addressComponent = result.regeocode.addressComponent;
+                var poiName = result.regeocode.formattedAddress.replace(addressComponent.district, '').replace(addressComponent.province, '').replace(addressComponent.township, '').trim();
+                $('#poiName').val(poiName);
             } else {
-                if (option.value === '7') {
-                    option.innerText = 'Default  Map';
-                }
-                else if (option.value === '6') {
-                    option.innerText = 'Satellite Map';
-                }
+                $('#poiName').val(isChinese ? '地图选点' : 'Map Point');
             }
         });
-    }
-    // 更新地图语言
-    function updateMapLayer() {
-        if (gaodeLayer) {
-            map.removeLayer(gaodeLayer); // 移除原来的图层
-        }
-        gaodeLayer = L.tileLayer("http://wprd03.is.autonavi.com/appmaptile?style=7&x={x}&y={y}&z={z}&lang=" + (isChinese ? "zh_cn" : "en") + "&size=1&scl=1&ltype=7&key=b6acf9a34babd2e400c2628043c8d2c9", {
-            attribution: "高德地图",
-            maxZoom: 21
-        }).addTo(map);
-    }
+    });
+}
 
-    // 更新页面语言函数
-    function updateLanguage() {
-        var elements = document.querySelectorAll('[data-chinese], [data-english]'); // 选择所有带有 data-chinese 或 data-english 属性的元素
-        elements.forEach(function (element) {
-            if (isChinese && element.hasAttribute('data-chinese')) { // 如果当前语言为中文并且元素有 data-chinese 属性
-                element.innerText = element.getAttribute('data-chinese'); // 显示中文文本
-            } else if (!isChinese && element.hasAttribute('data-english')) { // 如果当前语言为英文并且元素有 data-english 属性
-                element.innerText = element.getAttribute('data-english'); // 显示英文文本
-            }
-        });
-    }
-    // 监听地图样式选择框的变化
-    document.getElementById('mapStyleSelect').addEventListener('change', function() {
-        var selectedStyle = this.value;
-        updateMapLayer(selectedStyle);
+$(document).ready(function() {
+    $('#mapStyleSelect').change(function() {
+        var style = $(this).val();
+        updateMapLayer(style);
     });
 
-    // 更新地图图层函数，根据所选样式更新地图
+    map = new AMap.Map('map', {
+        zoom: 13,
+        zooms: [4, 21],
+        center: [116.397428, 39.90923],
+        viewMode: '2D',
+        lang: 'zh_cn',
+    });
+
     function updateMapLayer(style) {
-        if (gaodeLayer) {
-            map.removeLayer(gaodeLayer); // 移除原来的图层
+        map.setMapStyle(style);
+    }
+
+    $('#toggleLanguageButton').click(function() {
+        toggleLanguage();
+    });
+
+    function toggleLanguage() {
+        isChinese = !isChinese;
+        var button = document.getElementById('toggleLanguageButton');
+        button.innerText = isChinese ? '中文' : 'EN';
+
+        $('[data-chinese]').each(function() {
+            var chineseText = $(this).data('chinese');
+            var englishText = $(this).data('english');
+            $(this).text(isChinese ? chineseText : englishText);
+        });
+
+        map.setLang(isChinese ? 'zh_cn' : 'en');
+    }
+
+    map.on('click', function(e) {
+        var lat = e.lnglat.lat;
+        var lng = e.lnglat.lng;
+        $('#coordinates').val(lat + ',' + lng);
+        getPOIName(e.lnglat);
+
+        if (marker) {
+            marker.setMap(null);
         }
-        gaodeLayer = L.tileLayer("http://wprd03.is.autonavi.com/appmaptile?style=" + style + "&x={x}&y={y}&z={z}&lang=" + (isChinese ? "zh_cn" : "en") + "&size=1&scl=1&ltype=" + style + "&key=b6acf9a34babd2e400c2628043c8d2c9", {
-            attribution: "高德地图",
-            maxZoom: 21
-        }).addTo(map);
-    }
-    var previousMarker = null; // 存储前一个标记
-    var isProcessingClick = false; // 标志是否正在处理点击事件
-    var isProcessingSearch = false; // 标志是否正在处理搜索事件
 
-    function addClickListener(map) {
-        map.on('click', function(e) {
-            if (isProcessingClick) return; // 如果正在处理点击事件，返回
-            isProcessingClick = true;
-
-            var lat = e.latlng.lat.toFixed(6);
-            var lng = e.latlng.lng.toFixed(6);
-            if (previousMarker !== null) {
-                map.removeLayer(previousMarker); // 删除前一个标记
-            }
-            var url = 'https://restapi.amap.com/v3/geocode/regeo?key=b6acf9a34babd2e400c2628043c8d2c9&location=' + lng + ',' + lat + '&extensions=all';
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    var poiName = 'Selected Point';
-                    if (data.regeocode && data.regeocode.pois && data.regeocode.pois.length > 0) {
-                        poiName = data.regeocode.pois[0].name;
-                    }
-                    var marker = L.marker([lat, lng]).addTo(map);
-                    marker.bindPopup((isChinese ? 'POI名称: ' : 'POI Name: ') + poiName + '<br>' + (isChinese ? '经度' : 'Longitude') + ': ' + lng + '<br>' + (isChinese ? '纬度' : 'Latitude') + ': ' + lat).openPopup();
-                    document.getElementById('poiName').value = poiName;
-                    document.getElementById('coordinates').value = lng + ',' + lat;
-                    previousMarker = marker; // 更新前一个标记
-                    isProcessingClick = false; // 点击事件处理完成
-                })
-                .catch(error => {
-                    console.error('Error fetching POI data:', error);
-                    document.getElementById('poiName').value = '';
-                    document.getElementById('coordinates').value = (isChinese ? '获取POI信息时出错\n' : 'Error fetching POI data\n') + (isChinese ? '经度' : 'Longitude') + ': ' + lng + '\n' + (isChinese ? '纬度' : 'Latitude') + ': ' + lat;
-                    isProcessingClick = false; // 点击事件处理完成
-                });
+        marker = new AMap.Marker({
+            position: e.lnglat,
+            map: map,
+            icon: new AMap.Icon({
+                size: new AMap.Size(30, 30),
+                image: 'poi.png',
+                imageSize: new AMap.Size(30, 30)
+            }),
+            offset: new AMap.Pixel(-15, -25)  // 设置偏移量，图标底部中心点为锚点
         });
-    }
+    });
 
-    document.addEventListener('DOMContentLoaded', function() {
-        map = L.map('map', {
-            maxZoom: 20, // 设置最大缩放级别为18
-            minZoom: 4 // 设置最小缩放级别为3
-        }).setView([39.908823, 116.39747], 12);
+    $('#searchButton').click(function() {
+        searchLocation();
+    });
 
-        // Custom scale control
-        var customScaleControl = L.control.scale({
-            maxWidth: 200, // 设置比例尺控件的最大宽度
-            metric: true, // 显示米单位
-            imperial: false, // 不显示英制单位
-            position: 'bottomright', // 设置比例尺控件的位置为地图右下角
-        });
-
-        customScaleControl.addTo(map);
-
-        // Add OpenStreetMap layer
-        var osmLayer = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "&copy; OpenStreetMap contributors",
-            maxZoom: 20
-        }).addTo(map);
-
-        // Set max bounds to restrict panning
-        var maxBounds = L.latLngBounds(
-            L.latLng(-85, -180), // Southwest
-            L.latLng(85, 180)    // Northeast
-        );
-
-        map.setMaxBounds(maxBounds);
-        // Add Gaode (Amap) layer
-        gaodeLayer = L.tileLayer("http://wprd03.is.autonavi.com/appmaptile?style=7&x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&ltype=7&key=b6acf9a34babd2e400c2628043c8d2c9", {
-            attribution: "高德地图",
-            maxZoom: 20
-        }).addTo(map);
-
-        addClickListener(map);
-
-        // Add search button click event
-        document.getElementById('searchButton').addEventListener('click', searchLocation);
-
-        // Add enter key search event
-        document.getElementById('poiName').addEventListener('keydown', function(event) {
-            if (event.keyCode === 13) { // 如果按下回车键
-                searchLocation();
-            }
-        });
-
-        // Search location function
-        function searchLocation() {
-            if (isProcessingSearch) return; // 如果正在处理搜索事件，返回
-            isProcessingSearch = true;
-            // 删除前一个标记
-            if (previousMarker !== null) {
-                map.removeLayer(previousMarker);
-            }
-            var searchKeyword = document.getElementById('poiName').value.trim();
-            if (searchKeyword !== '') {
-                var searchUrl = 'https://restapi.amap.com/v3/place/text?key=b6acf9a34babd2e400c2628043c8d2c9&keywords=' + searchKeyword;
-                fetch(searchUrl)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === '1' && data.count > 0) {
-                            var firstResult = data.pois[0]; // 获取第一个搜索结果
-                            var location = firstResult.location.split(',');
-                            var lng = location[0];
-                            var lat = location[1];
-                            var poiName = firstResult.name; // 获取实际POI名称
-                            var marker = L.marker([lat, lng]).addTo(map);
-                            marker.bindPopup((isChinese ? 'POI名称: ' : 'POI Name: ') + poiName + '<br>' + (isChinese ? '经度' : 'Longitude') + ': ' + lng + '<br>' + (isChinese ? '纬度' : 'Latitude') + ': ' + lat).openPopup();
-                            map.setView([lat, lng], 13); // 将地图视图移动到搜索结果位置
-                            document.getElementById('coordinates').value = lng + ',' + lat;
-                            previousMarker = marker; // 更新前一个标记
-                            isProcessingSearch = false; // 搜索事件处理完成
-                        } else {
-                            console.error('No search results found.');
-                            alert((isChinese ? '未找到相关结果，请尝试其他关键词。' : 'No relevant results found. Please try other keywords.'));
-                            isProcessingSearch = false; // 搜索事件处理完成
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching search data:', error);
-                        alert((isChinese ? '搜索位置信息时出错，请稍后重试。' : 'Error fetching location data. Please try again later.'));
-                        isProcessingSearch = false; // 搜索事件处理完成
-                    });
-            } else {
-                alert((isChinese ? '请输入搜索关键词。' : 'Please enter search keyword.'));
-                isProcessingSearch = false; // 搜索事件处理完成
-            }
+    $('#poiName').keypress(function(e) {
+        if (e.which === 13) {
+            searchLocation();
         }
     });
+
+function searchLocation() {
+    if (isProcessingSearch) return; // 如果正在处理搜索事件，返回
+    isProcessingSearch = true;
+    // 删除前一个标记
+    if (previousMarker) {
+        previousMarker.setMap(null);
+    }
+    var searchKeyword = document.getElementById('poiName').value.trim();
+    if (searchKeyword !== '') {
+        var searchUrl = 'https://restapi.amap.com/v3/place/text?key=b6acf9a34babd2e400c2628043c8d2c9&keywords=' + encodeURIComponent(searchKeyword);
+        fetch(searchUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === '1' && data.count > 0) {
+                    var firstResult = data.pois[0]; // 获取第一个搜索结果
+                    var location = [parseFloat(firstResult.location.split(',')[0]), parseFloat(firstResult.location.split(',')[1])];
+                    var poiName = firstResult.name; // 获取实际POI名称
+
+                    if (marker) {
+                        marker.setMap(null);
+                    }
+
+                    marker = new AMap.Marker({
+                        position: location,
+                        map: map,
+                        icon: new AMap.Icon({
+                            size: new AMap.Size(30, 30),
+                            image: 'poi.png',
+                            imageSize: new AMap.Size(30, 30)
+                        }),
+                        offset: new AMap.Pixel(-15, -25)  // 设置偏移量，图标底部中心点为锚点
+                    });
+
+                    map.setCenter(location); // 将地图中心移动到搜索结果位置
+                    document.getElementById('coordinates').value = location[1] + ',' + location[0]; // 经度在前，纬度在后
+                    // 不更新输入框内容
+                    isProcessingSearch = false; // 搜索事件处理完成
+                } else {
+                    console.error('No search results found.');
+                    Swal.fire({
+                        title: (isChinese ? '未找到相关结果或调用次数已上限' : 'No results were found or the number of calls was capped'),
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    isProcessingSearch = false; // 搜索事件处理完成
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching search data:', error);
+                Swal.fire({
+                    title: (isChinese ? '搜索位置信息时出错，请稍后重试。' : 'Error fetching location data. Please try again later.'),
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                isProcessingSearch = false; // 搜索事件处理完成
+            });
+    } else {
+        Swal.fire({
+            title: (isChinese ? '请输入搜索关键词。' : 'Please enter search keyword.'),
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+        isProcessingSearch = false; // 搜索事件处理完成
+    }
+}
+
+});
 </script>
 </body>
 </html>

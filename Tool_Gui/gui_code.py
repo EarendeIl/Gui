@@ -1,7 +1,7 @@
 import os
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QUrl
+from PyQt5.QtCore import QUrl, QTimer
 from PyQt5.QtGui import QFont
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
@@ -24,14 +24,13 @@ map_location_path = os.path.join(data_dir, "map_location.html")
 class UiMainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1200, 850)
+        # MainWindow.setMinimumSize(QtCore.QSize(900, 710))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
         MainWindow.setSizePolicy(sizePolicy)
         MainWindow.setMinimumSize(QtCore.QSize(1350, 850))
-        MainWindow.setMaximumSize(QtCore.QSize(1350, 850))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(powerful_path), QtGui.QIcon.Normal,
                        QtGui.QIcon.Off)
@@ -42,6 +41,7 @@ class UiMainWindow(object):
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setFixedWidth(200)  # 设置宽度为 200 像素
         self.frame.setMinimumSize(QtCore.QSize(200, 0))
         self.frame.setStyleSheet("QFrame { border: none; background-color: #FFCCDA; }")
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
@@ -64,7 +64,6 @@ class UiMainWindow(object):
                                  "                background-color: #FFCCDA; /* 默认背景色 */\n"
                                  "                font-weight: bold;\n"
                                  "                border: 2px solid #FFCCDA; /* 默认边框 */\n"
-                                 "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                  "            }\n"
                                  "            QPushButton:hover {\n"
                                  "                background-color: #FFBFD5; /* 悬停时的背景色FFCCDA */\n"
@@ -101,7 +100,6 @@ class UiMainWindow(object):
                                "                background-color: #FFCCDA; /* 默认背景色 */\n"
                                "                font-weight: bold;\n"
                                "                border: 2px solid #FFCCDA; /* 默认边框 */\n"
-                               "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                "            }\n"
                                "            QPushButton:hover {\n"
                                "                background-color: #FFBFD5; /* 悬停时的背景色FFCCDA */\n"
@@ -135,7 +133,6 @@ class UiMainWindow(object):
                                 "                background-color: #FFCCDA; /* 默认背景色 */\n"
                                 "                font-weight: bold;\n"
                                 "                border: 2px solid #FFCCDA; /* 默认边框 */\n"
-                                "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                 "            }\n"
                                 "            QPushButton:hover {\n"
                                 "                background-color: #FFBFD5; /* 悬停时的背景色FFCCDA */\n"
@@ -170,7 +167,6 @@ class UiMainWindow(object):
                                "                background-color: #FFCCDA; /* 默认背景色 */\n"
                                "                font-weight: bold;\n"
                                "                border: 2px solid #FFCCDA; /* 默认边框 */\n"
-                               "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                "            }\n"
                                "            QPushButton:hover {\n"
                                "                background-color: #FFBFD5; /* 悬停时的背景色FFCCDA */\n"
@@ -195,7 +191,6 @@ class UiMainWindow(object):
         self.map.setChecked(False)
         self.map.setObjectName("map")
         self.more = QtWidgets.QPushButton(self.frame)
-        self.more.setGeometry(QtCore.QRect(37, 750, 200, 40))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -210,7 +205,6 @@ class UiMainWindow(object):
                                 "                font-weight: bold;\n"
                                 "                background-color: #FEA5C3; /* 默认背景色 */\n"
                                 "                border: 2px solid #FEA5C3; /* 默认边框 */\n"
-                                "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                 "            }\n"
                                 "            QPushButton:hover {\n"
                                 "                background-color: #FD7EB0  ; /* 悬停时的背景色 */\n"
@@ -241,7 +235,6 @@ class UiMainWindow(object):
                                   "                background-color: #FFCCDA; /* 默认背景色 */\n"
                                   "                font-weight: bold;\n"
                                   "                border: 2px solid #FFCCDA; /* 默认边框 */\n"
-                                  "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                   "            }\n"
                                   "            QPushButton:hover {\n"
                                   "                background-color: #FFBFD5; /* 悬停时的背景色FFCCDA */\n"
@@ -275,7 +268,6 @@ class UiMainWindow(object):
                                  "                background-color: #FFCCDA; /* 默认背景色 */\n"
                                  "                font-weight: bold;\n"
                                  "                border: 2px solid #FFCCDA; /* 默认边框 */\n"
-                                 "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                  "            }\n"
                                  "            QPushButton:hover {\n"
                                  "                background-color: #FFBFD5; /* 悬停时的背景色FFCCDA */\n"
@@ -385,7 +377,6 @@ class UiMainWindow(object):
                                       "\n"
                                       "                background-color: #FEA5C3; /* 默认背景色 */\n"
                                       "                border: 2px solid #FEA5C3; /* 默认边框 */\n"
-                                      "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                       "            }\n"
                                       "            QPushButton:hover {\n"
                                       "                background-color: #FD7EB0; /* 悬停时的背景色 */\n"
@@ -401,7 +392,6 @@ class UiMainWindow(object):
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.open_gaode = QtWidgets.QPushButton(self.tools_page)
-        self.open_gaode.setMinimumSize(QtCore.QSize(0, 0))
         self.open_gaode.setMinimumSize(QtCore.QSize(0, 42))
         self.open_gaode.setMaximumSize(QtCore.QSize(16777215, 42))
         self.open_gaode.setAutoFillBackground(False)
@@ -876,7 +866,6 @@ class UiMainWindow(object):
                                  "                border-radius: 8px;\n"
                                  "                background-color: #FFBFD5; /* 默认背景色 */\n"
                                  "                border: 2px solid #FFBFD5; /* 默认边框 */\n"
-                                 "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                  "            }\n"
                                  "QPushButton:hover {\n"
                                  "    background-color: #FFCCDA; /* 悬停状态下的颜色 */\n"
@@ -896,7 +885,6 @@ class UiMainWindow(object):
                                   "                border-radius: 8px;\n"
                                   "                background-color: #FFBFD5; /* 默认背景色 */\n"
                                   "                border: 2px solid #FFBFD5; /* 默认边框 */\n"
-                                  "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                   "            }\n"
                                   "QPushButton:hover {\n"
                                   "    background-color: #FFCCDA; /* 悬停状态下的颜色 */\n"
@@ -919,7 +907,6 @@ class UiMainWindow(object):
                                 "                border-radius: 8px;\n"
                                 "                background-color: #FFBFD5; /* 默认背景色 */\n"
                                 "                border: 2px solid #FFBFD5; /* 默认边框 */\n"
-                                "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                 "            }\n"
                                 "QPushButton:hover {\n"
                                 "    background-color: #FFCCDA; /* 悬停状态下的颜色 */\n"
@@ -999,7 +986,6 @@ class UiMainWindow(object):
                                        "                border-radius: 8px;\n"
                                        "                background-color: #FFBFD5; /* 默认背景色 */\n"
                                        "                border: 2px solid #FFBFD5; /* 默认边框 */\n"
-                                       "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                        "            }\n"
                                        "QPushButton:hover {\n"
                                        "    background-color: #FFCCDA; /* 悬停状态下的颜色 */\n"
@@ -1063,7 +1049,6 @@ class UiMainWindow(object):
                                        "                border-radius: 8px;\n"
                                        "                background-color: #FFBFD5; /* 默认背景色 */\n"
                                        "                border: 2px solid #FFBFD5; /* 默认边框 */\n"
-                                       "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                        "            }\n"
                                        "QPushButton:hover {\n"
                                        "    background-color: #FFCCDA; /* 悬停状态下的颜色 */\n"
@@ -1154,7 +1139,6 @@ class UiMainWindow(object):
                                          "                border-radius: 8px;\n"
                                          "                background-color: #FFBFD5; /* 默认背景色 */\n"
                                          "                border: 2px solid #FFBFD5; /* 默认边框 */\n"
-                                         "                box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */\n"
                                          "            }\n"
                                          "QPushButton:hover {\n"
                                          "    background-color: #FFCCDA; /* 悬停状态下的颜色 */\n"
@@ -1171,6 +1155,8 @@ class UiMainWindow(object):
         self.verticalLayout_6.addLayout(self.verticalLayout_5)
         self.verticalLayout_2.addLayout(self.verticalLayout_6)
         self.textEdit = QtWidgets.QTextEdit(self.tools_page)
+        # self.textEdit.setGeometry(10, 10, 200, 100)  # 设置 x, y, 宽度和高度
+        # self.textEdit.setFixedHeight(500)  # 设置高度为 100 像素
         self.textEdit.setStyleSheet("QTextEdit { color: #FA57A1; }"
                                     "QTextEdit:focus { border: none; border-bottom: 2px solid #FFBFD5; color: "
                                     "#FA57A1; }"
@@ -1228,7 +1214,7 @@ class UiMainWindow(object):
         self.other_page.setObjectName("other_page")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.other_page)
         self.stacked_widget.addWidget(self.other_page)
-        self.horizontalLayout.setStretch(0, 5)
+        self.horizontalLayout.setStretch(0, 3)
         self.horizontalLayout.setStretch(1, 19)
         self.retranslateUi(MainWindow)
         self.map_functions_table()
@@ -1242,19 +1228,34 @@ class UiMainWindow(object):
         self.map_functions_page.setStyleSheet("background-color:#F5F5F5")
         # 创建一个 QWebEngineView 并加载 HTML 文件
         self.web_view = QWebEngineView()
-        # 请将 'path/to/your/map_with_input.html' 替换为你的 HTML 文件的实际路径
+        # 替换为你的 HTML 文件的实际路径
         self.web_view.load(QUrl.fromLocalFile(map_location_path))
         # 将 QWebEngineView 添加到布局中
         self.verticalLayout_2.addWidget(self.web_view)
         self.stacked_widget.addWidget(self.map_functions_page)
+        # 使用 QTimer 在界面加载完成后获取高度
+        QTimer.singleShot(0, self.more_height)
+
+    def more_height(self):
+        # 获取 centralwidget 的高度
+        a = self.centralwidget.height()
+        self.more_hig = int(a)
+        self.more.setGeometry(QtCore.QRect(30, self.more_hig - 85, 140, 30))
+
+    def resizeEvent(self, event):
+        """
+        :type event: QResizeEvent
+        """
+        # 在窗口大小变化时更新按钮位置
+        self.more_height()
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "ToolMaster"))
         self.tools.setText(_translate("MainWindow", "  Tools"))
-        self.bug.setText(_translate("MainWindow", "  Bug Reporting"))
-        self.perf.setText(_translate("MainWindow", "  Performance"))
-        self.map.setText(_translate("MainWindow", "  Map Coordinates"))
+        self.bug.setText(_translate("MainWindow", "  Bug"))
+        self.perf.setText(_translate("MainWindow", "  Perf"))
+        self.map.setText(_translate("MainWindow", "  Map"))
         self.more.setText(_translate("MainWindow", "摇一摇"))
         self.label_2.setText(_translate("MainWindow", "-----------------------------------------------"))
         self.report.setText(_translate("MainWindow", "  Reports"))
@@ -1274,25 +1275,25 @@ class UiMainWindow(object):
         self.close_auto.setText(_translate("MainWindow", "关闭AUTO助手"))
         self.open_point.setText(_translate("MainWindow", "打开屏幕指针"))
         self.close_point.setText(_translate("MainWindow", "关闭屏幕指针"))
-        self.open_wifi_2.setText(_translate("MainWindow", "打开Wi-Fi"))
-        self.close_wifi_2.setText(_translate("MainWindow", "关闭Wi-Fi"))
+        self.open_wifi_2.setText(_translate("MainWindow", "打开WiFi"))
+        self.close_wifi_2.setText(_translate("MainWindow", "关闭WiFi"))
         self.open_logcat_2.setText(_translate("MainWindow", "抓取LOGCAT"))
         self.close_logcat_2.setText(_translate("MainWindow", "停止LOGCAT"))
         self.setting_2.setText(_translate("MainWindow", "安卓原生设置"))
-        self.root.setText(_translate("MainWindow", "ADB ROOT"))
+        self.root.setText(_translate("MainWindow", "ROOT"))
         self.verity.setText(_translate("MainWindow", "DISABLE"))
-        self.reboot.setText(_translate("MainWindow", "ADB REBOOT"))
-        self.remount.setText(_translate("MainWindow", "ADB REMOUNT"))
-        self.devices.setText(_translate("MainWindow", "ADB ClEAR"))
+        self.reboot.setText(_translate("MainWindow", "REBOOT"))
+        self.remount.setText(_translate("MainWindow", "REMOUNT"))
+        self.devices.setText(_translate("MainWindow", "ClEAR"))
         self.label_3.setText(_translate("MainWindow", "Monkey"))
         self.tcpip.setText(_translate("MainWindow", "TCP IP"))
         self.monkey.setText(_translate("MainWindow", "START MONKEY"))
         self.label_4.setText(_translate("MainWindow", "File operation"))
-        self.pull.setText(_translate("MainWindow", "ADB PULL"))
+        self.pull.setText(_translate("MainWindow", "PULL"))
         self.browser_one.setText(_translate("MainWindow", "BROWSER"))
-        self.push.setText(_translate("MainWindow", "ADB PUSH"))
+        self.push.setText(_translate("MainWindow", "PUSH"))
         self.browser_two.setText(_translate("MainWindow", "BROWSER"))
-        self.install.setText(_translate("MainWindow", "ADB INSTALL"))
+        self.install.setText(_translate("MainWindow", "INSTALL"))
         self.browser_three.setText(_translate("MainWindow", "BROWSER"))
         self.Enter.setText(_translate("MainWindow", "ENTER"))
         self.stop.setText(_translate("MainWindow", "STOP MONKEY"))

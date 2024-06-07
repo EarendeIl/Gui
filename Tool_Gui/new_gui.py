@@ -15,6 +15,7 @@ class MainWindows(QMainWindow, UiMainWindow):
         super(MainWindows, self).__init__()
         self.app_package = None
         self.install_line_edit = ""
+
         self.pull_one = ""
         self.pull_two = ""
         self.push_two = ""
