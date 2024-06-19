@@ -2,10 +2,11 @@ import os.path
 import subprocess
 import sys
 import time
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QTextCursor
 from gui_code import UiMainWindow
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
 from btn_operate import Btn_Operate
 import threading
 
@@ -15,7 +16,6 @@ class MainWindows(QMainWindow, UiMainWindow):
         super(MainWindows, self).__init__()
         self.app_package = None
         self.install_line_edit = ""
-
         self.pull_one = ""
         self.pull_two = ""
         self.push_two = ""
@@ -26,6 +26,9 @@ class MainWindows(QMainWindow, UiMainWindow):
         # 当Btn_Operate中的output_signal信号被触发时，将输出的内容传递给update_text槽函数，从而更新文本显示的内容
         self.btn_operate.output_signal.connect(self.update_text)
         self.btn_operate.cmd_signal.connect(self.clear_cmd)
+        self.btn_operate.adb_refresh1.connect(self.devices_box)
+        self.btn_operate.adb_refresh2.connect(self.app_list)
+        self.btn_operate.devices1.connect(self.devices_value)
         # 连接输入框的 textChanged 信号到槽函数,每当输入框中的文本发生变化时，它会发出信号
         self.Enter_Edit.textChanged.connect(self.update_cmd1)
         self.pull_edit_one.textChanged.connect(self.pull_line_one)
@@ -37,7 +40,6 @@ class MainWindows(QMainWindow, UiMainWindow):
         self.tools.setChecked(True)
         # 设置高德地图默认选中状态
         self.radioButton.setChecked(True)
-        # self.textEdit.append("已为您选中高德地图")
         # 设置textEdit为只读状态
         self.textEdit.setReadOnly(True)
         # 设置文本交互标志，以允许键盘和鼠标选择文本
@@ -51,7 +53,6 @@ class MainWindows(QMainWindow, UiMainWindow):
         self.other.clicked.connect(self.btn_clicked)
         self.radioButton.clicked.connect(self.Map_select)
         self.radioButton_2.clicked.connect(self.Map_select)
-
         self.tools.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.tools_page))
         self.bug.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.bug_reporting_page))
         self.perf.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.performance_page))
@@ -139,6 +140,22 @@ class MainWindows(QMainWindow, UiMainWindow):
         self.browser_two.clicked.connect(lambda: self.browser_path(browser_btn="push_edit_one"))
         # Browser_THREE
         self.browser_three.clicked.connect(lambda: self.browser_path(browser_btn="install_edit_one"))
+        # refresh_devices---devices_comboBox
+        self.perf_window.refresh_devices.clicked.connect(
+            lambda: self.thread_refresh(refresh1="adb devices", refresh2="adb shell pm list package"))
+
+        # refresh_devices---app_comboBox
+        self.perf_window.refresh_devices.clicked.connect(
+            lambda: self.thread_devices_info())
+
+    def thread_refresh(self, refresh1, refresh2):
+        thread = threading.Thread(target=self.btn_operate.box_refresh,
+                                  kwargs={"refresh1": refresh1, "refresh2": refresh2})
+        thread.start()
+
+    def thread_devices_info(self):
+        thread = threading.Thread(target=self.btn_operate.devices_info)
+        thread.start()
 
     def cmd_operate(self):
         self.Enter.clicked.connect(lambda: self.adb_shell_thread())
@@ -196,6 +213,8 @@ class MainWindows(QMainWindow, UiMainWindow):
     def adb_shell_thread(self):
         if self.cmd1.strip() == "adb shell":
             self.textEdit.append("wo~~~~~~~~bu~~~~~~~~hui~~~~~~~~ao~~~~~~~~ao~~~~~~~~")
+            # 手动滚动到底部
+            self.textEdit.moveCursor(QTextCursor.End)
             # 创建了 QTextCursor 对象 控制文本插入、删除、移动
             cursor = self.textEdit.textCursor()
             # 将光标移动到文本的末尾
@@ -216,37 +235,43 @@ class MainWindows(QMainWindow, UiMainWindow):
         if self.radioButton.isChecked():
             self.textEdit.append("已选择地图：高德地图；")
             self.app_package = "com.autonavi.amapauto"
-
         if self.radioButton_2.isChecked():
             self.textEdit.append("已选择地图：腾讯地图；")
             self.app_package = "com.tencent.wecarnavi"
 
     def Monkey_Start(self):
-        process = subprocess.Popen("adb shell getprop ro.build.version.sdk", stdout=subprocess.PIPE, text=True,
-                                   creationflags=subprocess.CREATE_NO_WINDOW)
-        out, _ = process.communicate()
-        for self.version in out.strip().split("\n"):
-            if int(self.version) >= 26:
-                self.btn_thread(
-                    cmd="adb shell am start-foreground-service -a com.autonavi.amapauto.autohelper.service.monkey -e "
-                        "act start -e app {} -e runTime 9999 -e maxCrash 100".format(self.app_package))
-            if int(self.version) < 26:
-                self.btn_thread(
-                    cmd="adb shell am startservice -a com.autonavi.amapauto.autohelper.service.monkey -e act "
-                        "start -e app {} -e runTime 9999 -e maxCrash 100".format(self.app_package))
+        process = subprocess.Popen("adb shell getprop ro.build.version.sdk", stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+        out, err = process.communicate()
+        if out:
+            for self.version in out.strip().split("\n"):
+                if int(self.version) >= 26:
+                    self.btn_thread(
+                        cmd="adb shell am start-foreground-service -a com.autonavi.amapauto.autohelper.service.monkey "
+                            "-e"
+                            "act start -e app {} -e runTime 9999 -e maxCrash 100".format(self.app_package))
+                if int(self.version) < 26:
+                    self.btn_thread(
+                        cmd="adb shell am startservice -a com.autonavi.amapauto.autohelper.service.monkey -e act "
+                            "start -e app {} -e runTime 9999 -e maxCrash 100".format(self.app_package))
+        if err:
+            self.btn_operate.output_signal.emit(err)
 
     def Monkey_Stop(self):
-        process = subprocess.Popen("adb shell getprop ro.build.version.sdk", stdout=subprocess.PIPE, text=True,
-                                   creationflags=subprocess.CREATE_NO_WINDOW)
-        out, _ = process.communicate()
-        for self.version in out.strip().split("\n"):
-            if int(self.version) >= 26:
-                self.btn_thread(
-                    cmd="adb shell am start-foreground-service -a com.autonavi.amapauto.autohelper.service.monkey "
-                        "-e act stop")
-            if int(self.version) < 26:
-                self.btn_thread(
-                    cmd="adb shell am startservice -a com.autonavi.amapauto.autohelper.service.monkey -e act stop")
+        process = subprocess.Popen("adb shell getprop ro.build.version.sdk", stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+        out, err = process.communicate()
+        if out:
+            for self.version in out.strip().split("\n"):
+                if int(self.version) >= 26:
+                    self.btn_thread(
+                        cmd="adb shell am start-foreground-service -a com.autonavi.amapauto.autohelper.service.monkey "
+                            "-e act stop")
+                if int(self.version) < 26:
+                    self.btn_thread(
+                        cmd="adb shell am startservice -a com.autonavi.amapauto.autohelper.service.monkey -e act stop")
+        if err:
+            self.btn_operate.output_signal.emit(err)
 
     def btn_thread(self, cmd):
         thread = threading.Thread(target=self.btn_operate.run_shell, kwargs={"cmd1": cmd})
@@ -258,6 +283,27 @@ class MainWindows(QMainWindow, UiMainWindow):
     def update_cmd1(self, text):
         # 更新 cmd1 的值
         self.cmd1 = text
+
+    def devices_box(self, text):
+        self.perf_window.devices_comboBox.clear()  # 清空现有项目
+        # 解析 adb devices 的输出
+        lines = text.strip().split('\n')
+        for line in lines[1:]:  # 跳过第一行
+            if line.strip() and 'device' in line:
+                device = line.split()[0]
+                self.perf_window.devices_comboBox.addItem(device)
+            else:
+                pass
+
+    def app_list(self, text):
+        self.perf_window.app_comboBox.clear()
+        lines = text.strip().split('\n')
+        for line in lines:
+            if line.strip() and 'package' in line:
+                app_list1 = line.split('package:')[1]
+                self.perf_window.app_comboBox.addItem(app_list1)
+            else:
+                pass
 
     def logcat_thread(self):
         devices = subprocess.Popen("adb shell ls", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
@@ -275,8 +321,12 @@ class MainWindows(QMainWindow, UiMainWindow):
             thread.start()
 
     def update_text(self, text):
-        # 将cmd命令符输出结果append到textedit
-        self.textEdit.append(text)
+        # 检查 textEdit 是否为空，如果不为空则插入换行符
+        if not self.textEdit.toPlainText().endswith('\n'):
+            self.textEdit.insertPlainText("\n")
+        # 手动滚动到底部
+        self.textEdit.moveCursor(QTextCursor.End)
+        self.textEdit.insertPlainText(text)
 
     def btn_clicked(self):
         # 判断当前槽函数是由哪个按钮触发的
@@ -288,8 +338,38 @@ class MainWindows(QMainWindow, UiMainWindow):
             elif bth is not sender:
                 bth.setChecked(False)
 
+    def devices_value(self, i, text):
+        try:
+            if i == 0:
+                text = text.strip().split('\n')[1]
+                text = text.strip().split()[0]
+            if i == 4:
+                text = text.split(':')[-1]
+                text = text.strip()
+            if i == 6:
+                count = text.strip().split().count("processor")
+                text = str(count)
+            if i == 7:
+                text = text.strip().split()[1] + " KB"
+            if i == 8:
+                text = text.split(':')[1]
+                text = text.strip()
+            if i == 9:
+                shell = text.strip().split()[0]
+                text = shell.strip().split("(")[0].split("=")[1]
+                if str(text) == "0":
+                    text = "True"
+                else:
+                    text = "False"
+            self.perf_window.devices_tableWidget.setItem(i - 1, 3, QTableWidgetItem(text))
+        except Exception:
+            for i in range(10):
+                self.perf_window.devices_tableWidget.setItem(i - 1, 3, QTableWidgetItem(''))
+
 
 if __name__ == '__main__':
+    # # 设置支持高分辨率屏幕自适应
+    QtCore.QCoreApplication.setAttribute(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     # 实例化app对象
     app = QApplication(sys.argv)
     # 实例化窗口对象
