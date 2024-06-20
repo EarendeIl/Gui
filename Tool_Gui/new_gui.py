@@ -1,6 +1,7 @@
 import os.path
 import subprocess
 import sys
+import re  # 正则表达式模块，用于解析ADB命令的输出
 import time
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
@@ -9,6 +10,7 @@ from gui_code import UiMainWindow
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
 from btn_operate import Btn_Operate
 import threading
+from PyQt5.QtCore import QTimer
 
 
 class MainWindows(QMainWindow, UiMainWindow):
@@ -147,6 +149,7 @@ class MainWindows(QMainWindow, UiMainWindow):
         # refresh_devices---app_comboBox
         self.perf_window.refresh_devices.clicked.connect(
             lambda: self.thread_devices_info())
+        self.perf_window.start_btn.clicked.connect(lambda: self.time_info())
 
     def thread_refresh(self, refresh1, refresh2):
         thread = threading.Thread(target=self.btn_operate.box_refresh,
@@ -365,6 +368,43 @@ class MainWindows(QMainWindow, UiMainWindow):
         except Exception:
             for i in range(10):
                 self.perf_window.devices_tableWidget.setItem(i - 1, 3, QTableWidgetItem(''))
+
+    def time_info(self):
+        self.mem = []
+        self.timestamps = []
+        self.start = time.time()
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.thread_mem)
+        self.timer.start(1000)
+
+    def thread_mem(self):
+        threading.Thread(target=self.mem_info).start()
+
+    def get_mem_usage(self, package):
+        try:
+            process = subprocess.run(['adb', 'shell', 'dumpsys', 'meminfo', package], stderr=subprocess.PIPE, text=True,
+                                     stdout=subprocess.PIPE,
+                                     creationflags=subprocess.CREATE_NO_WINDOW)
+            if process.returncode == 0:
+                match = re.search(r'TOTAL\s+(\d+)', process.stdout)
+                if match:
+                    return int(match.group(1)) / 1024
+            return None
+        except Exception:
+            pass
+
+    def mem_info(self):
+        mem_usage = self.get_mem_usage("com.tencent.wecarnavi")
+        if mem_usage is not None:
+            self.mem.append(mem_usage)
+            self.perf_window.mem_canvas.axes.cla()
+            self.perf_window.mem_canvas.axes.set_title('MEM (MB)')
+            self.perf_window.mem_canvas.axes.set_ylabel('MEM (MB)')
+            self.timestamps.append(time.time() - self.start)
+            self.perf_window.mem_canvas.axes.plot(self.timestamps, self.mem, label="MEM")
+            self.perf_window.mem_canvas.axes.legend()
+            # self.perf_window.mem_canvas.axes.cla()
+            self.perf_window.mem_canvas.draw()
 
 
 if __name__ == '__main__':
