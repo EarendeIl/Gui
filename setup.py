@@ -1,7 +1,7 @@
-import sys
-import os
-from cx_Freeze import Executable
-from setuptools import setup, find_packages
+# import sys
+# import os
+# from cx_Freeze import Executable
+# from setuptools import setup, find_packages
 
 """
 name: 你的包的名称。
@@ -93,56 +93,58 @@ classifiers: 包的分类标签，通常包括授权许可、支持的 Python �
 #     executables=executables
 # )
 
-from distutils.core import setup
-from py2exe import freeze
-
-import sys
-import os
-from cx_Freeze import setup, Executable
-from py2exe import freeze
-import os
-# 在 new_gui.py 顶部添加导入语句
-
-
-# 确保路径正确
-script_path = os.path.join('Perfect_Gui', 'new_gui.py')
-icon_path = os.path.join('Perfect_Gui', 'powerful.ico')
-
-# 定义打包选项
-options = {
-    'includes': ['Perfect_Gui.btn_operate', 'Perfect_Gui.gui_code'],
-    'packages': ['os', 'sys', 'time', 'threading', 'subprocess', 'PyQt5.QtCore', 'PyQt5.QtGui', 'PyQt5.QtWidgets'],
-    'bundle_files': 1,  # 1 表示将所有内容打包到一个文件中
-    'compressed': True,
-    'optimize': 2,
-    'dist_dir': 'dist',  # 输出目录
-}
-
-# 定义要生成的可执行文件和资源文件
-executables = [
-    {
-        'script': script_path,
-        'icon_resources': [(0, icon_path)],
-    }
-]
-
-data_files = [
-    ('', [os.path.join('Perfect_Gui', 'map_location.html')]),
-    ('', [os.path.join('Perfect_Gui', 'bb.png')]),
-    ('', [os.path.join('Perfect_Gui', 'bug.png')]),
-    ('', [os.path.join('Perfect_Gui', 'lala.png')]),
-    ('', [os.path.join('Perfect_Gui', 'map.png')]),
-    ('', [os.path.join('Perfect_Gui', 'other.png')]),
-    ('', [os.path.join('Perfect_Gui', 'performance.png')]),
-    ('', [os.path.join('Perfect_Gui', 'powerful.png')]),
-    ('', [os.path.join('Perfect_Gui', 'report.png')]),
-    ('', [os.path.join('Perfect_Gui', 'tools.png')]),
-]
-
-# 调用 freeze 函数
-freeze(
-    console=executables,
-    options={'py2exe': options},
-    data_files=data_files
-)
-
+# from distutils.core import setup
+# from py2exe import freeze
+#
+# import sys
+# import os
+# from cx_Freeze import setup, Executable
+# from py2exe import freeze
+# import os
+# # 在 new_gui.py 顶部添加导入语句
+#
+#
+# # 确保路径正确
+# script_path = os.path.join('Perfect_Gui', 'new_gui.py')
+# icon_path = os.path.join('Perfect_Gui', 'powerful.ico')
+#
+# # 定义打包选项
+# options = {
+#     'includes': ['Perfect_Gui.btn_operate', 'Perfect_Gui.gui_code'],
+#     'packages': ['os', 'sys', 'time', 'threading', 'subprocess', 'PyQt5.QtCore', 'PyQt5.QtGui', 'PyQt5.QtWidgets'],
+#     'bundle_files': 1,  # 1 表示将所有内容打包到一个文件中
+#     'compressed': True,
+#     'optimize': 2,
+#     'dist_dir': 'dist',  # 输出目录
+# }
+#
+# # 定义要生成的可执行文件和资源文件
+# executables = [
+#     {
+#         'script': script_path,
+#         'icon_resources': [(0, icon_path)],
+#     }
+# ]
+#
+# data_files = [
+#     ('', [os.path.join('Perfect_Gui', 'map_location.html')]),
+#     ('', [os.path.join('Perfect_Gui', 'bb.png')]),
+#     ('', [os.path.join('Perfect_Gui', 'bug.png')]),
+#     ('', [os.path.join('Perfect_Gui', 'lala.png')]),
+#     ('', [os.path.join('Perfect_Gui', 'map.png')]),
+#     ('', [os.path.join('Perfect_Gui', 'other.png')]),
+#     ('', [os.path.join('Perfect_Gui', 'performance.png')]),
+#     ('', [os.path.join('Perfect_Gui', 'powerful.png')]),
+#     ('', [os.path.join('Perfect_Gui', 'report.png')]),
+#     ('', [os.path.join('Perfect_Gui', 'tools.png')]),
+# ]
+#
+# # 调用 freeze 函数
+# freeze(
+#     console=executables,
+#     options={'py2exe': options},
+#     data_files=data_files
+# )
+#
+# a = [1, 2, 3, 4, 5, 6, 7]
+# print(a[3])

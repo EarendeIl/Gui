@@ -24,6 +24,7 @@ class MainWindows(QMainWindow, UiMainWindow):
         self.push_one = ""
         self.cmd1 = ""
         self.setupUi(self)
+        self.result = True
         self.btn_operate = Btn_Operate()
         # 当Btn_Operate中的output_signal信号被触发时，将输出的内容传递给update_text槽函数，从而更新文本显示的内容
         self.btn_operate.output_signal.connect(self.update_text)
@@ -149,7 +150,8 @@ class MainWindows(QMainWindow, UiMainWindow):
         # refresh_devices---app_comboBox
         self.perf_window.refresh_devices.clicked.connect(
             lambda: self.thread_devices_info())
-        self.perf_window.start_btn.clicked.connect(lambda: self.time_info())
+        self.perf_window.start_btn.clicked.connect(lambda: self.cpu_time_info())
+        self.perf_window.start_btn.clicked.connect(lambda: self.mem_time_info())
 
     def thread_refresh(self, refresh1, refresh2):
         thread = threading.Thread(target=self.btn_operate.box_refresh,
@@ -369,16 +371,27 @@ class MainWindows(QMainWindow, UiMainWindow):
             for i in range(10):
                 self.perf_window.devices_tableWidget.setItem(i - 1, 3, QTableWidgetItem(''))
 
-    def time_info(self):
+    def mem_time_info(self):
         self.mem = []
-        self.timestamps = []
-        self.start = time.time()
+        self.timestamps1 = []
+        self.start1 = time.time()
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.thread_mem)
         self.timer.start(1000)
 
+    def cpu_time_info(self):
+        self.cpu = []
+        self.timestamps2 = []
+        self.start2 = time.time()
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.thread_cpu)
+        self.timer.start(1000)
+
     def thread_mem(self):
-        threading.Thread(target=self.mem_info).start()
+        threading.Thread(target=self.mem_info, kwargs={"package": "com.tencent.wecarnavi"}).start()
+
+    def thread_cpu(self):
+        threading.Thread(target=self.calculate_cpu_usage, kwargs={"package": "com.tencent.wecarnavi"}).start()
 
     def get_mem_usage(self, package):
         try:
@@ -389,22 +402,64 @@ class MainWindows(QMainWindow, UiMainWindow):
                 match = re.search(r'TOTAL\s+(\d+)', process.stdout)
                 if match:
                     return int(match.group(1)) / 1024
+                else:
+                    return 0
             return None
         except Exception:
             pass
 
-    def mem_info(self):
-        mem_usage = self.get_mem_usage("com.tencent.wecarnavi")
+    def mem_info(self, package):
+        mem_usage = self.get_mem_usage(package)
         if mem_usage is not None:
             self.mem.append(mem_usage)
             self.perf_window.mem_canvas.axes.cla()
             self.perf_window.mem_canvas.axes.set_title('MEM (MB)')
             self.perf_window.mem_canvas.axes.set_ylabel('MEM (MB)')
-            self.timestamps.append(time.time() - self.start)
-            self.perf_window.mem_canvas.axes.plot(self.timestamps, self.mem, label="MEM")
+            self.timestamps1.append(time.time() - self.start1)
+            self.perf_window.mem_canvas.axes.plot(self.timestamps1, self.mem, label="MEM")
             self.perf_window.mem_canvas.axes.legend()
-            # self.perf_window.mem_canvas.axes.cla()
             self.perf_window.mem_canvas.draw()
+
+    def get_cpu_usage(self, package):
+        try:
+            process = subprocess.run(['adb', 'shell', 'pidof', package], stdout=subprocess.PIPE,
+                                     text=True)
+            pid = process.stdout.strip()
+            process1 = subprocess.run('adb shell "cat /proc/stat | grep ^cpu"', stdout=subprocess.PIPE, text=True)
+            cpu = process1.stdout.strip().split('\n')[0].split()[1:-3]
+            # 获取CPU使用时间总和
+            total_cpu = sum(list(map(int, cpu)))
+            # 获取空闲的cpu时间
+            idle = cpu[3]
+            if pid:
+                process2 = subprocess.run(f'adb shell cat /proc/{pid}/stat', stdout=subprocess.PIPE, text=True)
+                cpu1 = process2.stdout.strip().split()[13:17]
+                jiff = sum(list(map(int, cpu1)))
+                return [total_cpu, idle, jiff]
+            else:
+                return [total_cpu, idle, 0]
+        except Exception as e:
+            print(e)
+
+    def calculate_cpu_usage(self, package):
+        total_cpu1, idle1, jiff1 = self.get_cpu_usage(package)
+        # while self.result:
+        total_cpu2, idle2, jiff2 = self.get_cpu_usage(package)
+        self.pcpu = 100.0 * (int(jiff2) - int(jiff1)) / (int(total_cpu2) - int(total_cpu1))  # process cpu
+        total_cpu1, idle1, jiff1 = total_cpu2, idle2, jiff2
+        self.cpu_info()
+
+    def cpu_info(self):
+        self.cpu_usage = self.pcpu
+        if self.cpu_usage is not None:
+            self.cpu.append(self.cpu_usage)
+            self.perf_window.cpu_canvas.axes.cla()
+            self.perf_window.cpu_canvas.axes.set_title('CPU')
+            self.perf_window.cpu_canvas.axes.set_ylabel('CPU (%)')
+            self.timestamps2.append(time.time() - self.start2)
+            self.perf_window.cpu_canvas.axes.plot(self.timestamps2, self.cpu)
+            # self.perf_window.cpu_canvas.axes.legend()
+            self.perf_window.cpu_canvas.draw()
 
 
 if __name__ == '__main__':
