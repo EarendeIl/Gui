@@ -3,8 +3,8 @@ import subprocess
 import sys
 import re  # 正则表达式模块，用于解析ADB命令的输出
 import time
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import Qt
+from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5.QtCore import Qt, QTime
 from PyQt5.QtGui import QImage, QTextCursor
 from gui_code import UiMainWindow
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
@@ -12,10 +12,16 @@ from btn_operate import Btn_Operate
 import threading
 from PyQt5.QtCore import QTimer
 
+current_dir = os.path.dirname(__file__)
+data_dir = os.path.join(current_dir, 'data')
+start_path = os.path.join(data_dir, 'start1.png')
+stop_path = os.path.join(data_dir, 'stop.png')
+
 
 class MainWindows(QMainWindow, UiMainWindow):
     def __init__(self):
         super(MainWindows, self).__init__()
+        self.selected_app = None
         self.app_package = None
         self.install_line_edit = ""
         self.pull_one = ""
@@ -24,7 +30,11 @@ class MainWindows(QMainWindow, UiMainWindow):
         self.push_one = ""
         self.cmd1 = ""
         self.setupUi(self)
+        self.timer2 = QTimer(self)
+        self.timer2.timeout.connect(self.thread_update_timer)
+        self.start_time = QTime()
         self.result = True
+        self.start = True
         self.btn_operate = Btn_Operate()
         # 当Btn_Operate中的output_signal信号被触发时，将输出的内容传递给update_text槽函数，从而更新文本显示的内容
         self.btn_operate.output_signal.connect(self.update_text)
@@ -56,6 +66,7 @@ class MainWindows(QMainWindow, UiMainWindow):
         self.other.clicked.connect(self.btn_clicked)
         self.radioButton.clicked.connect(self.Map_select)
         self.radioButton_2.clicked.connect(self.Map_select)
+        self.perf_window.start_btn.setDisabled(True)
         self.tools.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.tools_page))
         self.bug.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.bug_reporting_page))
         self.perf.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.performance_page))
@@ -146,12 +157,34 @@ class MainWindows(QMainWindow, UiMainWindow):
         # refresh_devices---devices_comboBox
         self.perf_window.refresh_devices.clicked.connect(
             lambda: self.thread_refresh(refresh1="adb devices", refresh2="adb shell pm list package"))
-
         # refresh_devices---app_comboBox
         self.perf_window.refresh_devices.clicked.connect(
             lambda: self.thread_devices_info())
-        self.perf_window.start_btn.clicked.connect(lambda: self.cpu_time_info())
-        self.perf_window.start_btn.clicked.connect(lambda: self.mem_time_info())
+        self.perf_window.start_btn.clicked.connect(lambda: self.start_icon())
+
+    def start_icon(self):
+        if self.start:
+            self.start_time = QTime.currentTime()
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(stop_path), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.perf_window.start_btn.setIcon(icon)
+            self.perf_window.refresh_devices.setDisabled(True)
+            self.perf_window.app_comboBox.setDisabled(True)
+            self.perf_window.devices_comboBox.setDisabled(True)
+            threading.Thread(target=self.cpu_time_info()).start()
+            threading.Thread(target=self.mem_time_info()).start()
+            threading.Thread(target=self.timer2.start(1000)).start()
+        else:
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(start_path), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.perf_window.start_btn.setIcon(icon)
+            self.timer.stop()
+            self.timer1.stop()
+            self.timer2.stop()
+            self.perf_window.refresh_devices.setDisabled(False)
+            self.perf_window.app_comboBox.setDisabled(False)
+            self.perf_window.devices_comboBox.setDisabled(False)
+        self.start = not self.start
 
     def thread_refresh(self, refresh1, refresh2):
         thread = threading.Thread(target=self.btn_operate.box_refresh,
@@ -299,6 +332,20 @@ class MainWindows(QMainWindow, UiMainWindow):
                 self.perf_window.devices_comboBox.addItem(device)
             else:
                 pass
+        if self.perf_window.devices_comboBox.currentText():
+            self.perf_window.start_btn.setDisabled(False)
+        self.perf_window.devices_comboBox.currentTextChanged.connect(self.devices_update)
+
+    def devices_update(self):
+        if self.perf_window.devices_comboBox.currentText():
+            self.perf_window.start_btn.setDisabled(False)
+        else:
+            self.perf_window.start_btn.setDisabled(True)
+        # self.selected_devices = self.perf_window.devices_comboBox.currentText()
+        # self.perf_window.devices_comboBox.currentTextChanged.connect(self.devices_name)
+
+    # def devices_name(self):
+    #     self.selected_devices = self.perf_window.devices_comboBox.currentText()
 
     def app_list(self, text):
         self.perf_window.app_comboBox.clear()
@@ -309,6 +356,12 @@ class MainWindows(QMainWindow, UiMainWindow):
                 self.perf_window.app_comboBox.addItem(app_list1)
             else:
                 pass
+        self.selected_app = self.perf_window.app_comboBox.currentText()
+        self.perf_window.app_comboBox.currentTextChanged.connect(self.app_name)
+
+    def app_name(self):
+        self.selected_app = self.perf_window.app_comboBox.currentText()
+        # if self.selected_app:
 
     def logcat_thread(self):
         devices = subprocess.Popen("adb shell ls", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
@@ -371,6 +424,17 @@ class MainWindows(QMainWindow, UiMainWindow):
             for i in range(10):
                 self.perf_window.devices_tableWidget.setItem(i - 1, 3, QTableWidgetItem(''))
 
+    def thread_update_timer(self):
+        threading.Thread(target=self.update_timer).start()
+
+    def update_timer(self):
+        elapsed_time = self.start_time.elapsed()  # Get elapsed time in milliseconds
+        elapsed_seconds = elapsed_time // 1000
+        hours = elapsed_seconds // 3600
+        minutes = (elapsed_seconds % 3600) // 60
+        seconds = elapsed_seconds % 60
+        self.perf_window.time_label.setText(f"{hours:02}:{minutes:02}:{seconds:02}")
+
     def mem_time_info(self):
         self.mem = []
         self.timestamps1 = []
@@ -383,15 +447,15 @@ class MainWindows(QMainWindow, UiMainWindow):
         self.cpu = []
         self.timestamps2 = []
         self.start2 = time.time()
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.thread_cpu)
-        self.timer.start(1000)
+        self.timer1 = QTimer(self)
+        self.timer1.timeout.connect(self.thread_cpu)
+        self.timer1.start(1000)
 
     def thread_mem(self):
-        threading.Thread(target=self.mem_info, kwargs={"package": "com.tencent.wecarnavi"}).start()
+        threading.Thread(target=self.mem_info, kwargs={"package": self.selected_app}).start()
 
     def thread_cpu(self):
-        threading.Thread(target=self.calculate_cpu_usage, kwargs={"package": "com.tencent.wecarnavi"}).start()
+        threading.Thread(target=self.calculate_cpu_usage, kwargs={"package": self.selected_app}).start()
 
     def get_mem_usage(self, package):
         try:
@@ -416,6 +480,7 @@ class MainWindows(QMainWindow, UiMainWindow):
             self.perf_window.mem_canvas.axes.set_title('MEM (MB)')
             self.perf_window.mem_canvas.axes.set_ylabel('MEM (MB)')
             self.timestamps1.append(time.time() - self.start1)
+
             self.perf_window.mem_canvas.axes.plot(self.timestamps1, self.mem, label="MEM")
             self.perf_window.mem_canvas.axes.legend()
             self.perf_window.mem_canvas.draw()
@@ -457,8 +522,8 @@ class MainWindows(QMainWindow, UiMainWindow):
             self.perf_window.cpu_canvas.axes.set_title('CPU')
             self.perf_window.cpu_canvas.axes.set_ylabel('CPU (%)')
             self.timestamps2.append(time.time() - self.start2)
-            self.perf_window.cpu_canvas.axes.plot(self.timestamps2, self.cpu)
-            # self.perf_window.cpu_canvas.axes.legend()
+            self.perf_window.cpu_canvas.axes.plot(self.timestamps2, self.cpu, label='CPU')
+            self.perf_window.cpu_canvas.axes.legend()
             self.perf_window.cpu_canvas.draw()
 
 

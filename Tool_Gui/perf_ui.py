@@ -72,13 +72,19 @@ class Perf_MainWindow(object):
         self.start_btn.setMinimumSize(QtCore.QSize(30, 30))
         self.start_btn.setMaximumSize(QtCore.QSize(30, 30))
         self.start_btn.setStyleSheet("QPushButton {\n"
-                                     "    border-radius: 15px; /* 半径应该是按钮宽度和高度的一半 */\n"
+                                     "    border-radius: 20px; /* 半径应该是按钮宽度和高度的一半 */\n"
                                      "    color: white; /* 设置字体颜色 */\n"
                                      "    min-width: 30px; /* 设置按钮的最小宽度 */\n"
                                      "    min-height: 30px; /* 设置按钮的最小高度 */\n"
                                      "    max-width: 30px; /* 设置按钮的最大宽度 */\n"
                                      "    max-height: 30px; /* 设置按钮的最大高度 */\n"
                                      "}\n"
+                                     "            QPushButton:hover {\n"
+                                     "                background-color: #F8F8FF; /* 悬停时的背景色FFCCDA */\n"
+                                     "            }\n"
+                                     "            QPushButton:pressed {\n"
+                                     "                background-color: #DCDCDC; /* 点击时的背景色 */\n"
+                                     "            }\n"
                                      "")
         self.start_btn.setText("")
         icon = QtGui.QIcon()

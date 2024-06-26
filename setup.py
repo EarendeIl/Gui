@@ -148,3 +148,57 @@ classifiers: 包的分类标签，通常包括授权许可、支持的 Python �
 #
 # a = [1, 2, 3, 4, 5, 6, 7]
 # print(a[3])
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel
+from PyQt5.QtCore import QTimer, QTime
+
+
+class MyWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.initUI()
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_timer)
+
+        self.start_time = QTime()
+
+    def initUI(self):
+        self.layout = QVBoxLayout()
+
+        self.time_label = QLabel("00:00:00")
+        self.layout.addWidget(self.time_label)
+
+        self.start_button = QPushButton('Start Timer')
+        self.start_button.clicked.connect(self.start_timer)
+        self.layout.addWidget(self.start_button)
+
+        self.stop_button = QPushButton('Stop Timer')
+        self.stop_button.clicked.connect(self.stop_timer)
+        self.layout.addWidget(self.stop_button)
+
+        self.setLayout(self.layout)
+        self.setWindowTitle('Timer Example')
+        self.show()
+
+    def start_timer(self):
+        self.start_time = QTime.currentTime()
+        self.timer.start(1000)  # Start the timer to update every second
+
+    def stop_timer(self):
+        self.timer.stop()
+
+    def update_timer(self):
+        elapsed_time = self.start_time.elapsed()  # Get elapsed time in milliseconds
+        elapsed_seconds = elapsed_time // 1000
+        hours = elapsed_seconds // 3600
+        minutes = (elapsed_seconds % 3600) // 60
+        seconds = elapsed_seconds % 60
+        self.time_label.setText(f"{hours:02}:{minutes:02}:{seconds:02}")
+
+
+if __name__ == '__main__':
+    import sys
+
+    app = QApplication(sys.argv)
+    window = MyWindow()
+    sys.exit(app.exec_())
