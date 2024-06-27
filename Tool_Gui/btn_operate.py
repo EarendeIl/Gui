@@ -63,7 +63,7 @@ class Btn_Operate(QThread):
                 if pid_stderr:
                     self.output_signal.emit(pid_stderr)
 
-    def box_refresh(self, refresh1, refresh2):
+    def box_refresh1(self, refresh1):
         process = subprocess.Popen(refresh1, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                    creationflags=subprocess.CREATE_NO_WINDOW)
         out, err = process.communicate()
@@ -72,6 +72,7 @@ class Btn_Operate(QThread):
         if err:
             self.adb_refresh1.emit(err)
 
+    def box_refresh2(self, refresh2):
         process1 = subprocess.Popen(refresh2, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     creationflags=subprocess.CREATE_NO_WINDOW)
         out, err = process1.communicate()

@@ -2,6 +2,8 @@
 import os
 import sys
 
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidgetItem, QApplication, QVBoxLayout
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -188,7 +190,7 @@ class Perf_MainWindow(object):
         self.perf_tableWidget.verticalHeader().setStretchLastSection(False)
         self.perf_tableWidget.setColumnWidth(0, 100)
         self.perf_tableWidget.setColumnWidth(1, 150)
-        perf_list = ['CPU Usage', 'CPU Total', 'MEM Usage', 'MEM Total', 'Network', 'GPU Usage', 'GPU Total', 'FPS']
+        perf_list = ['CPU Usage', 'CPU Peak', 'MEM Usage', 'MEM Peak', 'Network', 'GPU Usage', 'GPU Peak', 'FPS']
         perf_i = -1
         for perf_row in perf_list:
             perf_i = perf_i + 1

@@ -151,54 +151,151 @@ classifiers: 包的分类标签，通常包括授权许可、支持的 Python �
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel
 from PyQt5.QtCore import QTimer, QTime
 
+# class MyWindow(QWidget):
+#     def __init__(self):
+#         super().__init__()
+#
+#         self.initUI()
+#         self.timer = QTimer(self)
+#         self.timer.timeout.connect(self.update_timer)
+#
+#         self.start_time = QTime()
+#
+#     def initUI(self):
+#         self.layout = QVBoxLayout()
+#
+#         self.time_label = QLabel("00:00:00")
+#         self.layout.addWidget(self.time_label)
+#
+#         self.start_button = QPushButton('Start Timer')
+#         self.start_button.clicked.connect(self.start_timer)
+#         self.layout.addWidget(self.start_button)
+#
+#         self.stop_button = QPushButton('Stop Timer')
+#         self.stop_button.clicked.connect(self.stop_timer)
+#         self.layout.addWidget(self.stop_button)
+#
+#         self.setLayout(self.layout)
+#         self.setWindowTitle('Timer Example')
+#         self.show()
+#
+#     def start_timer(self):
+#         self.start_time = QTime.currentTime()
+#         self.timer.start(1000)  # Start the timer to update every second
+#
+#     def stop_timer(self):
+#         self.timer.stop()
+#
+#     def update_timer(self):
+#         elapsed_time = self.start_time.elapsed()  # Get elapsed time in milliseconds
+#         elapsed_seconds = elapsed_time // 1000
+#         hours = elapsed_seconds // 3600
+#         minutes = (elapsed_seconds % 3600) // 60
+#         seconds = elapsed_seconds % 60
+#         self.time_label.setText(f"{hours:02}:{minutes:02}:{seconds:02}")
+#
+#
+# if __name__ == '__main__':
+#     import sys
+#
+#     app = QApplication(sys.argv)
+#     window = MyWindow()
+#     sys.exit(app.exec_())
+#
+import sys
+import subprocess
+import re
+import time
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 
-class MyWindow(QWidget):
+
+class MplCanvas(FigureCanvas):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super().__init__(fig)
+
+
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setWindowTitle('Memory Usage Trend')
+        self.setGeometry(100, 100, 800, 600)
 
-        self.initUI()
+        layout = QVBoxLayout()
+
+        self.canvas1 = MplCanvas(self, width=5, height=4, dpi=100)
+        self.canvas1.axes.set_title('MEM (MB)')
+        self.canvas1.axes.set_xlabel('Time (m:ss)')
+        self.canvas1.axes.set_ylabel('MEM (MB)')
+        layout.addWidget(self.canvas1)
+
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+        self.data = []
+        self.timestamps = []
+        self.start_time = time.time()
+
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_timer)
+        self.timer.timeout.connect(self.update_plot)
+        self.timer.start(1000)  # Update every 1 second (1000 ms)
 
-        self.start_time = QTime()
+    def update_plot(self):
+        mem_usage = self.get_memory_usage()
+        if mem_usage is not None:
+            self.data.append(mem_usage)
 
-    def initUI(self):
-        self.layout = QVBoxLayout()
+            current_time = time.time() - self.start_time
+            self.timestamps.append(current_time)
 
-        self.time_label = QLabel("00:00:00")
-        self.layout.addWidget(self.time_label)
+            plot_data = self.data[1:]
+            plot_timestamps = self.timestamps[1:]
 
-        self.start_button = QPushButton('Start Timer')
-        self.start_button.clicked.connect(self.start_timer)
-        self.layout.addWidget(self.start_button)
+            self.canvas1.axes.clear()  # Clear the previous plot and axis settings
 
-        self.stop_button = QPushButton('Stop Timer')
-        self.stop_button.clicked.connect(self.stop_timer)
-        self.layout.addWidget(self.stop_button)
+            self.canvas1.axes.plot(plot_timestamps, plot_data, label='Memory Usage')
+            self.canvas1.axes.legend()
 
-        self.setLayout(self.layout)
-        self.setWindowTitle('Timer Example')
-        self.show()
+            # Limit the number of ticks to 5, always including the current time
+            # max_ticks = 5
+            # if len(plot_timestamps) > max_ticks:
+            #     step = max(1, len(plot_timestamps) // (max_ticks - 1))
+            #     x_ticks = plot_timestamps[::step] + [plot_timestamps[-1]]
+            #     x_ticks = list(dict.fromkeys(x_ticks))  # Remove duplicates
+            #     x_labels = ['{:d}:{:02}'.format(int(t // 60), int(t % 60)) for t in x_ticks]
+            # else:
+            x_ticks = plot_timestamps
+            x_labels = ['{:d}:{:02}'.format(int(t // 60), int(t % 60)) for t in plot_timestamps]
 
-    def start_timer(self):
-        self.start_time = QTime.currentTime()
-        self.timer.start(1000)  # Start the timer to update every second
+            self.canvas1.axes.set_xticks(x_ticks)  # Set limited tick positions
+            self.canvas1.axes.set_xticklabels(x_labels)  # Rotate labels to prevent overlap
 
-    def stop_timer(self):
-        self.timer.stop()
+            # self.canvas1.axes.set_title('MEM (MB)')
+            # self.canvas1.axes.set_xlabel('Time (m:ss)')
+            # self.canvas1.axes.set_ylabel('MEM (MB)')
+            self.canvas1.draw()
 
-    def update_timer(self):
-        elapsed_time = self.start_time.elapsed()  # Get elapsed time in milliseconds
-        elapsed_seconds = elapsed_time // 1000
-        hours = elapsed_seconds // 3600
-        minutes = (elapsed_seconds % 3600) // 60
-        seconds = elapsed_seconds % 60
-        self.time_label.setText(f"{hours:02}:{minutes:02}:{seconds:02}")
+    def get_memory_usage(self):
+        try:
+            result = subprocess.run(['adb', 'shell', 'dumpsys', 'meminfo', 'com.tencent.wecarnavi'],
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if result.returncode == 0:
+                match = re.search(r'TOTAL\s+(\d+)', result.stdout)
+                if match:
+                    return int(match.group(1)) / 1024  # Convert to MB
+            return None
+        except Exception as e:
+            print(f"Error fetching memory usage: {e}")
+            return None
 
 
 if __name__ == '__main__':
-    import sys
-
     app = QApplication(sys.argv)
-    window = MyWindow()
+    main = MainWindow()
+    main.show()
     sys.exit(app.exec_())
