@@ -1,3 +1,4 @@
+import logging
 import os.path
 import subprocess
 import sys
@@ -7,7 +8,6 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QTime
 from PyQt5.QtGui import QImage, QTextCursor
 from matplotlib.ticker import MaxNLocator
-
 from gui_code import UiMainWindow
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
 from btn_operate import Btn_Operate
@@ -32,6 +32,7 @@ class MainWindows(QMainWindow, UiMainWindow):
         self.push_one = ""
         self.cmd1 = ""
         self.setupUi(self)
+
         self.timer2 = QTimer(self)
         self.timer2.timeout.connect(self.thread_update_timer)
         self.start_time = QTime()
@@ -168,8 +169,43 @@ class MainWindows(QMainWindow, UiMainWindow):
             lambda: self.thread_devices_info())
         self.perf_window.start_btn.clicked.connect(lambda: self.start_icon())
 
+    # def perf_record(self):
     def start_icon(self):
         if self.start:
+            self.mem_sum = []
+            self.cpu_sum = []
+            self.mem_peak_max = []
+            self.cpu_peak_max = []
+            # 获取日志记录器实例
+            self.csv = logging.getLogger()
+            # 将记录器的日志级别设置为DEBUG
+            self.csv.setLevel(logging.DEBUG)
+            if os.path.exists(current_dir + "/perf_data"):
+                pass
+            else:
+                os.makedirs(current_dir + "/perf_data")
+            self.log_file = os.path.join(current_dir, "perf_data",
+                                         time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())) + '.csv')
+            # 创建文件处理器并设置日志级别和文件名
+            self.fh = logging.FileHandler(self.log_file)
+            # self.fh = logging.FileHandler(
+            #     current_dir + "/perf_data/" + time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())) + '.csv')
+            self.fh.setLevel(logging.INFO)
+            # 创建控制台处理器并设置日志级别
+            self.ch = logging.StreamHandler()
+            self.ch.setLevel(logging.INFO)
+            # 创建日志格式器，默认格式为空
+            formatter = logging.Formatter()
+            # 将格式器设置到控制台处理器上
+            self.ch.setFormatter(formatter)
+            # 将格式器设置到文件处理器上
+            self.fh.setFormatter(formatter)
+            # 添加处理器到日志记录器
+            self.csv.addHandler(self.ch)
+            self.csv.addHandler(self.fh)
+            # 设置表格（日志文件）的列名
+            bt = "'Time', 'device info', 'package', 'MEM Usage', 'MEM Peak', 'CPU Usage', 'CPU Peak'".replace("'", "")
+            self.csv.info(bt)
             self.start_time = QTime.currentTime()
             stop_icon = QtGui.QIcon()
             stop_icon.addPixmap(QtGui.QPixmap(stop_path), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -187,10 +223,43 @@ class MainWindows(QMainWindow, UiMainWindow):
             self.timer.stop()
             self.timer1.stop()
             self.timer2.stop()
+            self.read_file(self.log_file)
+            self.ch.close()  # 关闭控制台处理器
+            self.fh.close()  # 关闭文件处理器
+            self.csv.removeHandler(self.ch)  # 移除控制台处理器
+            self.csv.removeHandler(self.fh)  # 移除文件处理器
             self.perf_window.refresh_devices.setDisabled(False)
             self.perf_window.app_comboBox.setDisabled(False)
             self.perf_window.devices_comboBox.setDisabled(False)
         self.start = not self.start
+
+    def read_file(self, file_path):
+        try:
+            with open(file_path, 'r') as files:
+                file = files.readlines()[1:]
+                count = len(file)
+                for i in file:
+                    self.mem_sum.append(i.strip("'").split(',')[3].replace(' ', ''))
+                    self.mem_peak_max.append(i.strip("'").split(',')[4].replace(' ', ''))
+                    self.cpu_sum.append(i.strip("'").split(',')[5].replace(' ', ''))
+                    self.cpu_peak_max.append(i.strip("'").split(',')[6].replace(' ', ''))
+                mem_average = sum(list(map(float, self.mem_sum))) / count
+                mem_average_peak = max(list(map(float, self.mem_peak_max)))
+                cpu_average = sum(list(map(float, self.cpu_sum))) / count
+                cpu_average_peak = max(list(map(float, self.cpu_peak_max)))
+                sum_average = {
+                    'Time': 'Total',
+                    'device info': '',
+                    'package': '',
+                    'MEM average': '{:.2f}'.format(mem_average),
+                    'MEM Peak': '{:.2f}'.format(mem_average_peak),
+                    'CPU average': '{:.2f}'.format(cpu_average),
+                    'CPU Peak': '{:.2f}'.format(cpu_average_peak),
+                }
+                average = str(list(sum_average.values())).replace("[", "").replace("]", "")
+                self.csv.info(average.replace("'", ""))
+        except Exception as e:
+            print(e)
 
     def thread_refresh1(self, refresh1):
         thread = threading.Thread(target=self.btn_operate.box_refresh1,
@@ -337,8 +406,8 @@ class MainWindows(QMainWindow, UiMainWindow):
         lines = text.strip().split('\n')
         for line in lines[1:]:  # 跳过第一行
             if line.strip() and 'device' in line:
-                device = line.split()[0]
-                self.perf_window.devices_comboBox.addItem(device)
+                self.device = line.split()[0]
+                self.perf_window.devices_comboBox.addItem(self.device)
             else:
                 pass
         if self.perf_window.devices_comboBox.currentText() and self.selected_app:
@@ -353,21 +422,6 @@ class MainWindows(QMainWindow, UiMainWindow):
             self.timer2.stop()
         elif not self.start and self.perf_window.devices_comboBox.currentText():
             self.perf_window.start_btn.setDisabled(False)
-        # if not self.start:
-        #     self.perf_window.start_btn.setDisabled(False)
-
-    # self.perf_window.devices_comboBox.currentTextChanged.connect(self.devices_update)
-
-    # def devices_update(self):
-    #     if self.perf_window.devices_comboBox.currentText():
-    #         self.perf_window.start_btn.setDisabled(False)
-    #     else:
-    #         self.perf_window.start_btn.setDisabled(True)
-    # self.selected_devices = self.perf_window.devices_comboBox.currentText()
-    # self.perf_window.devices_comboBox.currentTextChanged.connect(self.devices_name)
-
-    # def devices_name(self):
-    #     self.selected_devices = self.perf_window.devices_comboBox.currentText()
 
     def app_list(self, text):
         self.perf_window.app_comboBox.clear()
@@ -423,6 +477,8 @@ class MainWindows(QMainWindow, UiMainWindow):
             if i == 0:
                 text = text.strip().split('\n')[1]
                 text = text.strip().split()[0]
+            if i == 1:
+                self.text = text
             if i == 4:
                 text = text.split(':')[-1]
                 text = text.strip()
@@ -456,6 +512,7 @@ class MainWindows(QMainWindow, UiMainWindow):
         minutes = (elapsed_seconds % 3600) // 60
         seconds = elapsed_seconds % 60
         self.perf_window.time_label.setText(f"{hours:02}:{minutes:02}:{seconds:02}")
+        self.time_timer = f"{hours:02}:{minutes:02}:{seconds:02}"
 
     def mem_time_info(self):
         self.mem = []
@@ -495,12 +552,12 @@ class MainWindows(QMainWindow, UiMainWindow):
             pass
 
     def mem_info(self, package):
-        mem_usage = self.get_mem_usage(package)
-        if mem_usage is not None:
+        self.mem_usage = self.get_mem_usage(package)
+        if self.mem_usage is not None:
             # 将内存数值添加到列表
-            self.mem.append(mem_usage)
+            self.mem.append(self.mem_usage)
             # 设置实时内存到perf_tableWidget
-            self.perf_window.perf_tableWidget.setItem(1, 3, QTableWidgetItem(format(mem_usage, '.2f')))
+            self.perf_window.perf_tableWidget.setItem(1, 3, QTableWidgetItem(format(self.mem_usage, '.2f')))
             # 设置内存最大值到perf_tableWidget
             self.perf_window.perf_tableWidget.setItem(2, 3, QTableWidgetItem(format(max(self.mem), '.2f')))
             # 更新表格
@@ -510,17 +567,10 @@ class MainWindows(QMainWindow, UiMainWindow):
             self.perf_window.mem_canvas.axes.set_ylabel('MEM (MB)')
             self.timestamps1.append(time.time() - self.start1)
             # 格式化时间为00:00
-            time1_format = ['{:d}:{:02}'.format(int(i // 60), int(i % 60)) for i in self.timestamps1]
+            time1_format = ['{:d}·{:02}'.format(int(i // 60), int(i % 60)) for i in self.timestamps1]
             self.perf_window.mem_canvas.axes.plot(time1_format, self.mem, label="MEM")
             # 设置 x 轴刻度的最大数量为 8
-
             self.perf_window.mem_canvas.axes.xaxis.set_major_locator(MaxNLocator(integer=True, prune='both', nbins=8))
-
-            # 动态调整横坐标范围
-            # self.perf_window.mem_canvas.axes.set_xlim(min(self.timestamps1[1:]), max(self.timestamps1))
-
-            self.perf_window.mem_canvas.axes.legend()
-            self.perf_window.mem_canvas.draw()
 
     def get_cpu_usage(self, package):
         try:
@@ -545,11 +595,11 @@ class MainWindows(QMainWindow, UiMainWindow):
 
     def calculate_cpu_usage(self, package):
         total_cpu1, idle1, jiff1 = self.get_cpu_usage(package)
-        # while self.result:
         total_cpu2, idle2, jiff2 = self.get_cpu_usage(package)
         self.pcpu = 100.0 * (int(jiff2) - int(jiff1)) / (int(total_cpu2) - int(total_cpu1))  # process cpu
         total_cpu1, idle1, jiff1 = total_cpu2, idle2, jiff2
         self.cpu_info()
+        self.csv_info(package)
 
     def cpu_info(self):
         self.cpu_usage = self.pcpu
@@ -563,12 +613,30 @@ class MainWindows(QMainWindow, UiMainWindow):
             self.perf_window.cpu_canvas.axes.set_title('CPU')
             self.perf_window.cpu_canvas.axes.set_ylabel('CPU (%)')
             self.timestamps2.append(time.time() - self.start2)
-            time2_format = ['{:d}:{:02}'.format(int(i // 60), int(i % 60)) for i in self.timestamps2]
-            self.perf_window.cpu_canvas.axes.plot(time2_format, self.cpu, label='CPU')
+            self.time2_format = ['{:d}·{:02}'.format(int(i // 60), int(i % 60)) for i in self.timestamps2]
+            self.perf_window.cpu_canvas.axes.plot(self.time2_format, self.cpu, label='CPU')
             # 设置 x 轴刻度的最大数量为 8
             self.perf_window.cpu_canvas.axes.xaxis.set_major_locator(MaxNLocator(integer=True, prune='both', nbins=8))
             self.perf_window.cpu_canvas.axes.legend()
+            self.perf_window.mem_canvas.axes.legend()
             self.perf_window.cpu_canvas.draw()
+            self.perf_window.mem_canvas.draw()
+
+    def csv_info(self, package):
+        time = self.time_timer
+        device = self.text
+        mem_usage = self.get_mem_usage(package)
+        cpu_usage = self.pcpu
+        sumdic = {'Time': time,
+                  'device info': device,
+                  'package': self.selected_app,
+                  'MEM Usage': '{:.2f}'.format(mem_usage),
+                  'MEM Peak': '{:.2f}'.format(max(self.mem)),
+                  'CPU Usage': '{:.2f}'.format(cpu_usage),
+                  'CPU Peak': '{:.2f}'.format(max(self.cpu)),
+                  }
+        list_v = str(list(sumdic.values())).replace("[", "").replace("]", "").replace("'", "")
+        self.csv.info(list_v)
 
 
 if __name__ == '__main__':

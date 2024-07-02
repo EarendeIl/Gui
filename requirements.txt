@@ -3,3 +3,4 @@ PyQtWebEngine
 folium
 pyqt5-tools
 nuitka
+matplotlib
